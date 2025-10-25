@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ke-helper"
+version = "0.1.0"
+authors = [
+    { name="Jason Cascio", email="cascio@google.com" },
+]
+description = "A utility package for retrieving dataset context and metadata from BigQuery Knowledge Engine Insights and the BigQuery Info Schema"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "google-cloud-bigquery",
+    "google-auth",
+    "pydantic",
+    "requests",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "twine"]
+
+[project.urls]
+"Homepage" = "https://github.com/jasoncascio/ke_helper_package" # TODO: Update this URL
+"Issues" = "https://github.com/jasoncascio/ke_helper_package/issues" # TODO: Update this URL
