@@ -273,6 +273,8 @@ class KEDatasetScanHelper(KEAuth):
                         new_scan = DDTableScan(**full_view_scan)
 
                     if scan.is_for_dataset:
+                        print(f"Hydrating DDDatasetScan for {scan.name}")
+                        print(scan.model_dump_json())
                         new_scan = DDDatasetScan(**full_view_scan)
 
                 if new_scan:
