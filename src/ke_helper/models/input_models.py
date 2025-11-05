@@ -202,7 +202,7 @@ class DDTableResult(BaseModel):
 class DDTableScan(DataScan):
     """Represents a DATA_DOCUMENTATION data scan."""
     data_documentation_spec: Optional[DDSpec] = Field(None, alias='dataDocumentationSpec')
-    data_documentation_result: DDTableResult = Field(..., alias='dataDocumentationResult')
+    data_documentation_result: Optional[DDTableResult] = Field(..., alias='dataDocumentationResult')
 
     @property
     def full_table_name(self) -> str:
