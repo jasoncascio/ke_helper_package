@@ -48,8 +48,8 @@ class ExecutionStatus(BaseModel):
     """Represents the execution status of the latest job for a scan."""
     # This field is optional as it's not present in all scan types (e.g., KNOWLEDGE_ENGINE).
     latest_job_start_time: Optional[datetime] = Field(None, alias='latestJobStartTime')
-    latest_job_end_time: datetime = Field(..., alias='latestJobEndTime')
-    latest_job_create_time: datetime = Field(..., alias='latestJobCreateTime')
+    latest_job_end_time: Optional[datetime] = Field(..., alias='latestJobEndTime')
+    latest_job_create_time: Optional[datetime] = Field(..., alias='latestJobCreateTime')
 
 
 class ScanTypeValue(Enum):
