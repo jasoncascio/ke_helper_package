@@ -268,12 +268,12 @@ class KEDatasetScanHelper(KEAuth):
 
                 if scan.type == ScanTypeValue.DATA_DOCUMENTATION:
                     if scan.is_for_table:
-                        print(f"Hydrating DDTableScan for {scan.name}")
+                        print(f"Hydrating DDTableScan for {scan.resource_name}")
                         print(scan.model_dump_json())
                         new_scan = DDTableScan(**full_view_scan)
 
                     if scan.is_for_dataset:
-                        print(f"Hydrating DDDatasetScan for {scan.name}")
+                        print(f"Hydrating DDDatasetScan for {scan.resource_name}")
                         print(scan.model_dump_json())
                         new_scan = DDDatasetScan(**full_view_scan)
 
