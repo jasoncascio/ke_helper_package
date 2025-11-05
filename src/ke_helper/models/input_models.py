@@ -190,13 +190,13 @@ class TableResult(BaseModel):
     queries: List[Query]
     query_theme: Optional[Dict[str, Any]] = Field(None, alias='queryTheme')
 
-
+# Made all optional
 class DDTableResult(BaseModel):
     """The main result object from a DATA_DOCUMENTATION table scan."""
-    queries: List[Query]
-    overview: str
-    the_schema: Schema = Field(alias="schema") # renamed to the_schema to preven collision
-    table_result: TableResult = Field(..., alias='tableResult')
+    queries: Optional[List[Query]]
+    overview: Optional[str]
+    the_schema: Optional[Schema] = Field(alias="schema") # renamed to the_schema to preven collision
+    table_result: Optional[TableResult] = Field(..., alias='tableResult')
 
 
 class DDTableScan(DataScan):
