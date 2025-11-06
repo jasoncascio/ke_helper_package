@@ -2,15 +2,17 @@ import os
 import sys
 from pathlib import Path
 import pytest
+import json
 
 # Add project root to Python path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.ke_helper import KEDatasetScanHelper
+from src.ke_helper import KEDatasetScanHelper, get_all_scans
 
 # Environment-specific variables
 PROJECT_ID = "ai-learning-agents"
 DATASET_NAME = "thelook"
+LOCATION = "us-central1"
 
 @pytest.fixture(scope="module")
 def ds_details():
@@ -67,5 +69,14 @@ def test_model_dump_json(ds_details):
     """
     json_string = ds_details.model_dump_json(indent=4)
     assert isinstance(json_string, str)
-    assert '"project_id": "ai-learning-agents"' in json_string
-    assert '"dataset_name": "thelook"' in json_string
+    assert '''"project_id": "ai-learning-agents"''' in json_string
+    assert '''"dataset_name": "thelook"''' in json_string
+
+def test_get_all_scans():
+    """
+    Tests the get_all_scans function.
+    """
+    scans_json_string = get_all_scans(PROJECT_ID, LOCATION)
+    assert isinstance(scans_json_string, str)
+    scans = json.loads(scans_json_string)
+    assert "dataScans" in scans
