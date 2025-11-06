@@ -24,7 +24,7 @@ from .models.output_models import (
 )
 from . import constants
 
-def get_all_scans(project_id: str, location: str, dataset_name: str = None):
+def get_all_scans(project_id: str, location: str):
     url = KEDatasetScanHelper.DATAPLEX_LIST_SCANS_URL.format(
         project_id=project_id, 
         location=location
@@ -33,6 +33,16 @@ def get_all_scans(project_id: str, location: str, dataset_name: str = None):
 
     return ke_auth.get_url_content(url)
 
+def get_scan(project_id: str, location: str, scan_id: str, full_view: bool = True):
+    base_url = KEDatasetScanHelper.DATAPLEX_LIST_SCANS_URL.format(
+        project_id=project_id, 
+        location=location
+    )
+    suffix = '?view=FULL' if full_view else ''
+    url = f"{base_url}/{scan_id}{suffix}"
+    ke_auth = KEAuth()
+
+    return ke_auth.get_url_content(url)
 
 """
   ------------------------------------------
