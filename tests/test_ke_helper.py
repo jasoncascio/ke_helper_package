@@ -36,7 +36,6 @@ def test_dataset_details_structure(ds_details):
     assert ds_details.dataset_description
     assert isinstance(ds_details.dataset_relationships, list)
     assert isinstance(ds_details.dataset_queries, list)
-    assert isinstance(ds_details.dataset_business_glossary, list)
     assert isinstance(ds_details.dataset_tables, list)
 
 def test_dataset_details_content(ds_details):
@@ -46,7 +45,6 @@ def test_dataset_details_content(ds_details):
     # Check that some data was returned in the lists
     assert len(ds_details.dataset_relationships) > 0
     assert len(ds_details.dataset_queries) > 0
-    assert len(ds_details.dataset_business_glossary) > 0
     assert len(ds_details.dataset_tables) > 0
 
     # Verify table blocklist is working

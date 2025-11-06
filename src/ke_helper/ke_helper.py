@@ -13,26 +13,30 @@ from .authentication import KEAuth
 from .models.input_models import (
     DataScan,
     ScanTypeValue,
-    KEScan,
     DDTableScan,
-    DDDatasetScan,
-    Query,
-    BusinessTerm
+    DDDatasetScan
 )
 from .models.output_models import (
     KEDatasetTable,
     KEDatasetRelationship,
-    KEDatasetDetails
+    KEDatasetDetails,
+    Query
 )
 from . import constants
 
 
-class NoKEScanFoundException(Exception): pass
+"""
+  ------------------------------------------
+  KEDatasetScanHelper
+  ------------------------------------------
+"""
+# class NoKEScanFoundException(Exception): pass # deprecated
 class NoDDScanFoundException(Exception): pass
-
 
 class KEDatasetScanHelper(KEAuth):
     """A helper for interacting with the Knowledge Engine API."""
+    DATAPLEX_BASE_URL = "https://dataplex.googleapis.com/v1"
+    DATAPLEX_LIST_SCANS_URL = DATAPLEX_BASE_URL + "/projects/{project_id}/locations/{location}/dataScans"
 
     def __init__(self, project_id: str, dataset_name: str):
         super().__init__()
@@ -89,13 +93,21 @@ class KEDatasetScanHelper(KEAuth):
         return return_list
 
     def _get_scans_of_interest(self) -> List[DataScan]:
-        scan_url = constants.DATAPLEX_LIST_SCANS_URL.format(
+        scan_url = self.DATAPLEX_LIST_SCANS_URL.format(
+            base_url=self.DATAPLEX_BASE_URL,
             project_id=self.project_id,
             location=self.dataset_location
         )
 
         try:
+            # print("\nSCAN URL: "+ scan_url + " \n")
+
             response = self.get_url_content(scan_url)
+
+            #####
+            # print(response)
+            #####
+
         except Exception as e:
             print(f"Error fetching data scans: {e}")
             raise e
@@ -115,7 +127,13 @@ class KEDatasetScanHelper(KEAuth):
 
         scans_of_interest = []
         for scan in scans.get('dataScans', []):
-            if scan.get('data') and scan.get('data').get('resource'):
+            ## note: and scan.get('type') eliminates items without type
+
+            if (  
+                  scan.get('data') 
+                  and scan.get('data').get('resource')
+                  and scan.get('type') == ScanTypeValue.DATA_DOCUMENTATION.value
+            ):
                 resource = scan.get('data').get('resource')
 
                 if resource.endswith(ds_test_string) or table_test_string in resource:
@@ -247,7 +265,7 @@ class KEDatasetScanHelper(KEAuth):
             scans = self._get_scans_of_interest()
 
             for scan in scans:
-                full_scan_url = f"{constants.DATAPLEX_BASE_URL}/{scan.name}?view=FULL"
+                full_scan_url = f"{self.DATAPLEX_BASE_URL}/{scan.name}?view=FULL"
 
                 try:
                     response = self.get_url_content(full_scan_url)
@@ -263,18 +281,15 @@ class KEDatasetScanHelper(KEAuth):
 
                 new_scan = None
 
-                if scan.type == ScanTypeValue.KNOWLEDGE_ENGINE:
-                    new_scan = KEScan(**full_view_scan)
+                # if scan.type == ScanTypeValue.KNOWLEDGE_ENGINE.value: ## !! Deprecated
+                #     new_scan = KEScan(**full_view_scan)
 
                 if scan.type == ScanTypeValue.DATA_DOCUMENTATION:
+
                     if scan.is_for_table:
-                        print(f"Hydrating DDTableScan for {scan.resource_name}")
-                        print(scan.model_dump_json())
                         new_scan = DDTableScan(**full_view_scan)
 
                     if scan.is_for_dataset:
-                        print(f"Hydrating DDDatasetScan for {scan.resource_name}")
-                        print(scan.model_dump_json())
                         new_scan = DDDatasetScan(**full_view_scan)
 
                 if new_scan:
@@ -282,12 +297,13 @@ class KEDatasetScanHelper(KEAuth):
 
         return self.__data_scans
 
-    @property # dataset knowledge engine scan, loop locally
-    def dataset_ke_scan(self) -> KEScan:
-        for scan in self.dataplex_scans:
-            if isinstance(scan, KEScan):
-                return scan
-        raise NoKEScanFoundException(f"No Knowledge Engine scan found for dataset {self.dataset_name}")
+    # deprecated
+    # property # dataset knowledge engine scan, loop locally
+    # def dataset_ke_scan(self) -> KEScan:
+    #     for scan in self.dataplex_scans:
+    #         if isinstance(scan, KEScan):
+    #             return scan
+    #     raise NoKEScanFoundException(f"No Knowledge Engine scan found for dataset {self.dataset_name}")
 
     @property # dataset data documentation scan, loop locally
     def dataset_dd_scan(self) -> DDDatasetScan:
@@ -298,13 +314,17 @@ class KEDatasetScanHelper(KEAuth):
 
     @property
     def dataset_description(self) -> str:
-        return self.dataset_ke_scan.dataset_description
+        return self.dataset_dd_scan.dataset_description
 
     @property
     def dataset_tables(self) -> List[KEDatasetTable]:
+
         tables = []
+
         for scan in self.dataplex_scans:
+
             if isinstance(scan, DDTableScan):
+
                 if self._table_is_allowed(scan.resource_name): # This is already filtered
 
                     ddl = None
@@ -312,13 +332,12 @@ class KEDatasetScanHelper(KEAuth):
                     cluster_columns = None
                     if self.__with_ddls:
                         ddl = self.table_ddls.get(scan.full_table_name, None)
-                        if ddl:
-                            partition_columns = self._get_bq_ddl_optimizations(
-                                ddl=ddl
-                            )
-                            cluster_columns = self._get_bq_ddl_optimizations(
-                                ddl=ddl, optimization_type='CLUSTER'
-                            )
+                        partition_columns = self._get_bq_ddl_optimizations(
+                            ddl=ddl
+                        )
+                        cluster_columns = self._get_bq_ddl_optimizations(
+                            ddl=ddl, optimization_type='CLUSTER'
+                        )
 
                     row_count = None
                     size_bytes = None
@@ -327,6 +346,13 @@ class KEDatasetScanHelper(KEAuth):
                         if table_counts:
                           row_count = table_counts.get("row_count")
                           size_bytes = table_counts.get("size_bytes")
+
+
+                    # print(type(scan.fields))
+                    # print(type(scan.fields[0]))
+                    # print(SchemaField(**scan.fields[0].model_dump()))
+                    # print(type(scan.queries))
+                    # print(type(scan.queries[0]))
 
                     tables.append(KEDatasetTable(**{
                         "name": scan.full_table_name,
@@ -346,9 +372,10 @@ class KEDatasetScanHelper(KEAuth):
     def dataset_queries(self) -> List[Query]:
         return self.dataset_dd_scan.queries
 
-    @property
-    def dataset_business_glossary(self) -> List[BusinessTerm]:
-        return self.dataset_ke_scan.business_glossary.terms
+    # deprecated
+    # property
+    # def dataset_business_glossary(self) -> List[BusinessTerm]:
+    #     return self.dataset_ke_scan.business_glossary.terms
 
     @property
     def dataset_relationships(self) -> List[KEDatasetRelationship]:
@@ -360,35 +387,39 @@ class KEDatasetScanHelper(KEAuth):
 
         return_relationships = []
 
-        relationships = self.dataset_ke_scan.schema_relationships
+        relationships = self.dataset_dd_scan.schema_relationships
         for relationship in relationships:
 
-          left_tuples = relationship.left_columns_tuple
-          table1_fqn = left_tuples[0].entry_fqn
-          table1_sql_name = f"{project_dataset}.{table1_fqn.split('/')[-1]}"
-          if not self._table_is_allowed(table1_fqn):
+          l_schema_paths = relationship.left_schema_paths
+          l_table_fqn = l_schema_paths.table_fqn
+          l_table_paths = l_schema_paths.paths
+          l_table_sql_name = f"{project_dataset}.{l_table_fqn.split('/')[-1]}"
+          if not self._table_is_allowed(l_table_fqn):
               continue
 
-          right_tuples = relationship.right_columns_tuple
-          table2_fqn = right_tuples[0].entry_fqn
-          table2_sql_name = f"{project_dataset}.{table2_fqn.split('/')[-1]}"
-          if not self._table_is_allowed(table2_fqn):
+          r_schema_paths = relationship.right_schema_paths
+          r_table_fqn = r_schema_paths.table_fqn
+          r_table_paths = r_schema_paths.paths
+          r_table_sql_name = f"{project_dataset}.{r_table_fqn.split('/')[-1]}"
+          if not self._table_is_allowed(r_table_fqn):
               continue
 
           join_conditions = []
 
-          for i, left_item in enumerate(left_tuples):
-              right_item = right_tuples[i]
-              new_join_condition = table1_sql_name + '.' + left_item.field_path
+          for i, l_table_path in enumerate(l_table_paths):
+              r_table_path = r_table_paths[i]
+              new_join_condition = l_table_sql_name + '.' + l_table_path
               new_join_condition += ' = '
-              new_join_condition += table2_sql_name + '.' + right_item.field_path
+              new_join_condition += r_table_sql_name + '.' + r_table_path
               join_conditions.append(new_join_condition)
 
           return_relationships.append(KEDatasetRelationship(**{
-              'table1': table1_sql_name,
-              'table2': table2_sql_name,
+              'table1': l_table_sql_name,
+              'table2': r_table_sql_name,
               'relationship': ' AND '.join(join_conditions),
-              'source': 'LLM-inferred'
+              'sources': relationship.sources,
+              'confidence_score': relationship.confidence_score,
+              'type': relationship.type,
           }))
 
         return return_relationships
@@ -402,6 +433,6 @@ class KEDatasetScanHelper(KEAuth):
             "dataset_description": self.dataset_description,
             "dataset_relationships": self.dataset_relationships,
             "dataset_queries": self.dataset_queries,
-            "dataset_business_glossary": self.dataset_business_glossary,
+            # "dataset_business_glossary": self.dataset_business_glossary, # deprecated
             "dataset_tables": self.dataset_tables
         })

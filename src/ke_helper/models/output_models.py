@@ -6,7 +6,7 @@
 import json
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from .input_models import Query, BusinessTerm, SchemaField
+from .input_models import Query, SchemaField
 
 
 class KEDatasetTable(BaseModel):
@@ -51,7 +51,10 @@ class KEDatasetRelationship(BaseModel):
     table1: str = Field(..., description="The name of the first table in the relationship.")
     table2: str = Field(..., description="The name of the second table in the relationship.")
     relationship: str = Field(..., description="The join condition that defines the relationship.")
-    source: str = Field(..., description="The source that inferred or defined this relationship.")
+    sources: List[str] = Field(..., description="A list of sources signals that inferred or defined this relationship.")
+    confidence_score: float = Field(..., description="A confidence score for the relationship.")
+    type: str = Field(..., description="The type of relationship, such as SCHEMA_JOIN")
+
 
 class KEDatasetDetails(BaseModel):
     """
@@ -63,7 +66,7 @@ class KEDatasetDetails(BaseModel):
     dataset_description: str = Field(..., description="A brief overview of the dataset.")
     dataset_relationships: List[KEDatasetRelationship] = Field(..., description="A list of table relationships.")
     dataset_queries: List[Query] = Field(..., description="A list of queries that can be run against the dataset.")
-    dataset_business_glossary: List[BusinessTerm] = Field(..., description="A list of business glossary terms.")
+    # dataset_business_glossary: List[BusinessTerm] = Field(..., description="A list of business glossary terms.") # deprecated
     dataset_tables: List[KEDatasetTable] = Field(..., description="A list of tables in the dataset.")
 
     @property
@@ -75,11 +78,12 @@ class KEDatasetDetails(BaseModel):
     def dataset_queries_json(self) -> str:
         full_model = self.model_dump()
         return json.dumps(full_model['dataset_queries'])
-
-    @property
-    def dataset_glossary_terms_json(self) -> str:
-        full_model = self.model_dump()
-        return json.dumps(full_model['dataset_business_glossary'])
+    
+    # deprecated
+    # property
+    # def dataset_glossary_terms_json(self) -> str:
+    #     full_model = self.model_dump()
+    #     return json.dumps(full_model['dataset_business_glossary'])
 
     @property
     def text_table_ddls(self) -> str:
