@@ -24,6 +24,15 @@ from .models.output_models import (
 )
 from . import constants
 
+def get_all_scans(project_id: str, location: str, dataset_name: str = None):
+    url = KEDatasetScanHelper.DATAPLEX_LIST_SCANS_URL.format(
+        project_id=project_id, 
+        location=location
+    )
+    ke_auth = KEAuth()
+
+    return ke_auth.get_url_content(url)
+
 
 """
   ------------------------------------------
