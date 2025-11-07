@@ -215,10 +215,11 @@ class TableResult(BaseModel):
 
 class DDTableResult(BaseModel):
     """The main result object from a DATA_DOCUMENTATION table scan."""
-    queries: List[Query]
+    name: str
     overview: str
     the_schema: Schema = Field(alias="schema") # renamed to the_schema to preven collision
-    table_result: TableResult = Field(..., alias='tableResult')
+    queries: List[Query]
+    # table_result: TableResult = Field(..., alias='tableResult')
 
 
 class DDTableScan(DataScan):
