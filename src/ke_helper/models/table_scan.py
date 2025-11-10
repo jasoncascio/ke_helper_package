@@ -5,15 +5,17 @@
   "resource": "//bigquery.googleapis.com/projects/{project_id}/datasets/{dataset}/tables/{table}"
   ------------------------------------------
 """
+from typing import List, Optional
+from pydantic import BaseModel, Field
 
 
-from .common_models import ScanBase, DDSpec, Schema, Query
+from .common_models import ScanBase, DDSpec, Schema, Query, SchemaField
 
 
 
 class DDTableResult(BaseModel):
     """The main result object from a DATA_DOCUMENTATION table scan."""
-    name: str
+    name: Optional[str] = None
     overview: str
     the_schema: Schema = Field(alias="schema") # renamed to the_schema to preven collision
     queries: List[Query]
@@ -31,7 +33,7 @@ class DDTableScan(ScanBase):
 
     @property
     def overview(self) -> str:
-        return self.data_documentation_result.table_result.overview # shortcut
+        return self.data_documentation_result.overview # shortcut
 
     @property
     def fields(self) -> List[SchemaField]:
@@ -39,4 +41,4 @@ class DDTableScan(ScanBase):
 
     @property
     def queries(self) -> List[Query]:
-        return self.data_documentation_result.table_result.queries
+        return self.data_documentation_result.queries

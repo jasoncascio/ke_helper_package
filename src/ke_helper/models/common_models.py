@@ -1,16 +1,17 @@
+
 """
   ------------------------------------------
   Atomic common classes for consuming the Knowledge Engine API responses
   ------------------------------------------
 """
-
-
 from datetime import datetime
-from typing import Optional, ClassVar
+from typing import Optional, ClassVar, List
 from uuid import UUID
+import json
 
 from pydantic import BaseModel, Field
 from enum import Enum
+
 
 
 class Query(BaseModel):
@@ -82,7 +83,7 @@ class Data(BaseModel):
 
 
 class ScanBase(BaseModel):
-    """Represents a single data scan item."""
+    """Represents a single data scan item from the top level scan."""
     name: str
     uid: UUID
     state: str

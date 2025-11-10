@@ -9,13 +9,12 @@ import re
 from typing import List
 from google.cloud import bigquery
 from pydantic import ValidationError
+
 from .authentication import KEAuth
-from .models.input_models import (
-    DataScan,
-    ScanTypeValue,
-    DDTableScan,
-    DDDatasetScan
-)
+from .models.common_models import ScanTypeValue
+from .models.data_scan import DataScan
+from .models.table_scan import DDTableScan
+from .models.dataset_scan import DDDatasetScan
 from .models.output_models import (
     KEDatasetTable,
     KEDatasetRelationship,

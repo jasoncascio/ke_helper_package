@@ -6,7 +6,10 @@
 import json
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from .input_models import Query, SchemaField
+
+
+from .common_models import Schema, SchemaField, Query
+
 
 
 class KEDatasetTable(BaseModel):
