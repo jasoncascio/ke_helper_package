@@ -307,8 +307,16 @@ class KEDatasetScanHelper(KEAuth):
                     if scan.is_for_table:
                         new_scan = DDTableScan(**full_view_scan)
 
-                    if scan.is_for_dataset:
-                        new_scan = DDDatasetScan(**full_view_scan)
+                    try:
+                        if scan.is_for_dataset:
+                            new_scan = DDDatasetScan(**full_view_scan)
+                    except ValidationError as e:
+                        print(
+                            f"""Error creating a detailed Data Documentation Dataset Scan object for {json.dumps(scan, indent=2)}:\n {e}\n\n
+                                This may be because project {self.self.project_id} has not been allowlisted for dataset level Data Insights Scans.
+                            """
+                        )
+                        
 
                 if new_scan:
                   self.__data_scans.append(new_scan)
@@ -328,7 +336,11 @@ class KEDatasetScanHelper(KEAuth):
         for scan in self.dataplex_scans:
             if isinstance(scan, DDDatasetScan):
                 return scan
-        raise NoDDScanFoundException(f"No Data Documentation scan found for dataset {self.dataset_name}")
+        raise NoDDScanFoundException(
+            f"""No Data Documentation scan found for dataset {self.dataset_name}.
+                Be sure that you have requested insights at the dataset level and stored the results.
+             """
+        )
 
     @property
     def dataset_description(self) -> str:
